@@ -1,6 +1,6 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { UserModule } from './users/user.module';
-import { ProducrModule } from './products/products.module';
+import { ProductModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './products/products.entity';
@@ -30,7 +30,7 @@ import { User } from './users/user.entity';
       }
     }),
     UserModule, 
-    ProducrModule, 
+    ProductModule, 
     ReviewsModule
   ],
   providers: [

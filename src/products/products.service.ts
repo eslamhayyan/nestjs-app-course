@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, UseGuards } from "@nestjs/common";
 import { CreatProductDto } from "./dtos/creat-product.dto";
 import { UpdateProductDto } from "./dtos/update-product-dto";
 import { Repository } from "typeorm";
 import { Product } from "./products.entity";
 import { InjectRepository } from "@nestjs/typeorm";
+import { UserService } from "src/users/user.service";
+import { AuthGuard } from "src/users/guards/auth.guard";
 
 
 @Injectable()
@@ -11,16 +13,22 @@ export class ProductService{
 
   constructor(
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>){}
-
-
-    public CreatProduct(dto: CreatProductDto){
-      const newProduct = this.productRepository.create(dto);
+    private readonly productRepository: Repository<Product>,
+    private readonly userService: UserService
+  ){}
+    
+    public async CreatProduct(dto: CreatProductDto, userId: number){
+      const user = await this.userService.getCurrentUser(userId);
+      const newProduct = this.productRepository.create({
+        ...dto,
+        title: dto.title.toLocaleLowerCase(),
+        user
+      });
       return this.productRepository.save(newProduct);
     }
   
     public getAll(){
-      return this.productRepository.find()
+      return this.productRepository.find();
     }
   
     public getOneBy(id: number){

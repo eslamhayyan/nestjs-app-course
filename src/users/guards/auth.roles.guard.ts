@@ -34,7 +34,7 @@ export class AuthRolesGuard implements CanActivate {
 
         if(roles.includes(user.userType))
         request[CURRENT_USER_KEY] = payload;
-      return true
+      
       }
       catch(error
       ){
@@ -44,5 +44,6 @@ export class AuthRolesGuard implements CanActivate {
     else {
       throw new BadRequestException("invalid token")
     }
+    return true
   }
 }

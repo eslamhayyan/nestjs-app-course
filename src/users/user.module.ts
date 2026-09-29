@@ -6,11 +6,12 @@ import { User } from "./user.entity";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { StringValue } from "ms";
+import { AuthProvider } from "./auth.provider";
 
 
 @Module({
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, AuthProvider],
   exports: [UserService],
   imports: [
     TypeOrmModule.forFeature([User]),
