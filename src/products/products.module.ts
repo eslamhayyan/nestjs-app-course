@@ -11,6 +11,7 @@ import { UserModule } from "src/users/user.module";
 @Module({
   controllers: [ProductController],
   providers: [ProductService],
-  imports: [TypeOrmModule.forFeature([Product]),JwtModule, ConfigModule, UserModule],
+  exports: [ProductService],
+  imports: [TypeOrmModule.forFeature([Product]), UserModule],
 })
 export class ProductModule{}

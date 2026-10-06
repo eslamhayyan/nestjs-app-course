@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UseGuards } from "@nestjs/common";
 import { CreatProductDto } from "./dtos/creat-product.dto";
 import { UpdateProductDto } from "./dtos/update-product-dto";
-import { Repository } from "typeorm";
+import { Repository, Like, Between } from "typeorm";
 import { Product } from "./products.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserService } from "src/users/user.service";
@@ -21,18 +21,22 @@ export class ProductService{
       const user = await this.userService.getCurrentUser(userId);
       const newProduct = this.productRepository.create({
         ...dto,
-        title: dto.title.toLocaleLowerCase(),
+        title: dto.title.toLowerCase(),
         user
       });
       return this.productRepository.save(newProduct);
     }
   
-    public getAll(){
-      return this.productRepository.find();
+    public getAll(title?: string, minPrice?: string, maxPrice?: string){
+      const filters = {
+        ...(title ? {title: Like(`%${title.toLowerCase()}%`)} : {}),
+        ...(minPrice && maxPrice ? {price: Between(parseFloat(minPrice), parseFloat(maxPrice))} : {}),
+      }
+      return this.productRepository.find({ where: filters });
     }
   
-    public getOneBy(id: number){
-      const product = this.productRepository.findOne({where: {id}});
+    public async getOneBy(id: number): Promise<Product> {
+      const product = await this.productRepository.findOne({where: {id}});
       if(!product) throw new NotFoundException("your product not found!");
       return product
     }

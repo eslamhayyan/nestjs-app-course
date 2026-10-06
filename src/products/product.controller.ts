@@ -1,4 +1,4 @@
-import { Controller, Get, Post,Body, Param, Put, Delete, ParseIntPipe, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post,Body, Param, Put, Delete, ParseIntPipe, UseGuards, Query } from "@nestjs/common";
 import { CreatProductDto } from "./dtos/creat-product.dto";
 import { UpdateProductDto } from "./dtos/update-product-dto";
 import { ProductService } from "./products.service";
@@ -37,8 +37,12 @@ export class ProductController{
    * @returns array of all products
    */
   @Get()
-  public getAllProduct(){
-    return this.productservice.getAll()
+  public getAllProduct(
+  @Query("title") title: string, 
+  @Query("minPrice") minPrice: string, 
+  @Query("maxPrice") maxPrice: string)
+  {
+    return this.productservice.getAll(title, minPrice, maxPrice)
   }
 
   /**

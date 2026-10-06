@@ -17,7 +17,7 @@ export class AuthRolesGuard implements CanActivate {
   ) { }
   async canActivate(context: ExecutionContext) {
 
-    const roles: UserType = this.reflector.getAllAndOverride('roles',[context.getHandler(), context.getClass()]);
+    const roles: UserType[] = this.reflector.getAllAndOverride('roles',[context.getHandler(), context.getClass()]);
     if(!roles || roles.length === 0) return false
 
     const request = context.switchToHttp().getRequest();
@@ -32,12 +32,11 @@ export class AuthRolesGuard implements CanActivate {
         const user = await this.userService.getCurrentUser(payload.id)
         if(!user) return false
 
-        if(roles.includes(user.userType))
+        if(!roles.includes(user.userType)) return false;
         request[CURRENT_USER_KEY] = payload;
       
       }
-      catch(error
-      ){
+      catch(error){
         throw new BadRequestException("invalid token")
       }
     }

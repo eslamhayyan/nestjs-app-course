@@ -16,10 +16,10 @@ import { AuthProvider } from "./auth.provider";
   imports: [
     TypeOrmModule.forFeature([User]),
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>{
         return{
-          global: true,
           secret: config.get<string>("JWT_SECRET"),
           signOptions: {expiresIn: config.get<string>("JWT_EXPIRES_IN") as StringValue}
         }
