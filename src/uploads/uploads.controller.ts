@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, NotFoundException, Param, Post, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Controller, Get, NotFoundException, Param, Post, Res, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import type {Express, Response} from "express";
@@ -16,26 +16,7 @@ export class UploadController{
 
   //Post ~/api/uploads
   @Post()
-  @UseInterceptors(FileInterceptor("file", {
-    storage: diskStorage({
-      destination: "./images",
-      filename: (req, file, cb) => {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const fileExtName = extname(file.originalname);
-        const newFileName = `${uniqueSuffix}${fileExtName}`;
-        cb(null, newFileName);
-      }
-    }),
-    fileFilter: (req, file, cb) => {
-      if(file.mimetype.startsWith("image/")){
-        return cb(null, true);
-      }
-        return cb(new BadRequestException("Only image files are allowed!"), false);
-    },
-    limits: {
-      fileSize: 5 * 1024 * 1024 // 5MB
-    }
-}))
+  @UseInterceptors(FileInterceptor("file"))
   uploadFile(@UploadedFile() file: Express.Multer.File){
     if(!file){
       throw new BadRequestException("File not found");
@@ -47,6 +28,30 @@ export class UploadController{
       filePath: file.path
     }
   }
+
+  /**
+   * receive multiple files from the client and handle them
+   * @param files files uploaded from the client
+   * @returns files uploaded successfully message with the list of uploaded files
+   */
+  @Post('multiple-files')
+  @UseInterceptors(FileInterceptor("files"))
+  uploadMultipleFiles(@UploadedFiles() files: Array<Express.Multer.File>){
+    if(!files || files.length === 0){
+      throw new BadRequestException("No files found");
+    }
+    console.log(files);
+    return {
+      message: "Files uploaded successfully",
+    }
+  }
+
+  /**
+   * retrieve an uploaded image by its name
+   * @param image image name to be retrieved from the server 
+   * @param res response object to send the image file
+   * @returns file response with the requested image or a 404 error if not found
+   */
   @Get(":image")
   public showUploadedImage(@Param("image") image: string, @Res() res: Response){
     const safeName = basename(image); // Prevent directory traversal attacks
@@ -55,4 +60,8 @@ export class UploadController{
     }
     return res.sendFile(safeName, { root: "./images" });
   }
+
+
+
+
 }

@@ -7,6 +7,7 @@ import { RegisterDto } from "./dtos/register.dto";
 import * as bcrypt from "bcryptjs";
 import { LoginDto } from "./dtos/login.dto";
 import { JwtPayLoadType } from "src/utils/types";
+import { MailService } from "src/mail/mail.service";
 
 @Injectable()
 export class AuthProvider {
@@ -14,6 +15,7 @@ export class AuthProvider {
   constructor(
       @InjectRepository(User) private readonly userRepository: Repository<User>,
       private readonly jwtService: JwtService,
+      private readonly mailService: MailService
     ) { }
     
   /**
@@ -49,7 +51,10 @@ export class AuthProvider {
       if (!user) throw new BadRequestException('user name or password are not valid');
       const isPasswordMatch = await bcrypt.compare(password, user.password);
       if (!isPasswordMatch) throw new BadRequestException('user name or password are not valid');
-      const accessToken = await this.generateJwt({ id: user.id, userType: user.userType })
+      const accessToken = await this.generateJwt({ id: user.id, userType: user.userType });
+      await this.mailService.sendLoginEmail(user.email).catch((error) => {
+        console.error("Failed to send login email:", error);
+      });
       return { accessToken };
     }
 
