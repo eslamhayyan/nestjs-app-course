@@ -28,6 +28,9 @@ export class User{
   @Column({default: false})
   isAcountVarified!: boolean;
 
+  @Column({type: 'varchar',nullable: true, default: null})
+  profileImage!: string | null;
+
   @CreateDateColumn({type:'timestamp', default: () => CURRENT_TIMESTAMP})
   createdAt!: Date;
   

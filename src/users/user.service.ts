@@ -9,6 +9,8 @@ import { UpdateDto } from "./dtos/update.dto";
 import { JwtPayLoadType } from "src/utils/types";
 import { UserType } from "src/utils/enums";
 import { AuthProvider } from "./auth.provider";
+import { join } from "path";
+import { unlink } from "fs/promises";
 
 @Injectable()
 export class UserService {
@@ -70,10 +72,9 @@ export class UserService {
     user.username = username ?? user.username;
     if (password) {
       user.password = await bcrypt.hash(password, 10);
-      await this.userRepository.save(user);
     }
 
-    return user;
+    return await this.userRepository.save(user);
   }
 
   /**
@@ -89,5 +90,40 @@ export class UserService {
       return { message: "user deleted" };
     }
     throw new ForbiddenException("access denied, you are not allowed");
+  }
+
+  /**
+   * set profile image for user
+   * @param userId id of the user
+   * @param newProfileImage profile image path or name
+   * @returns saved user object with updated profile image
+   */
+  public async setProfileImage(userId: number, newProfileImage: string) {
+    const user = await this.getCurrentUser(userId);
+    if (user.profileImage === null) {
+      user.profileImage = newProfileImage;
+    } else { await this.removeProfileImage(userId); 
+      user.profileImage = newProfileImage
+    }
+    return this.userRepository.save(user);
+  }
+
+
+  /**
+   * remove profile image for user
+   * @param userId id of the user
+   * @returns updated user object with profile image removed
+   */
+  public async removeProfileImage(userId: number) {
+    const user = await this.getCurrentUser(userId);
+    if (!user.profileImage) {
+      throw new NotFoundException("No profile image found");
+    }
+    const imagePath = join(process.cwd(), "images", "users", user.profileImage);
+    await unlink(imagePath).catch((err) => {
+      console.error("Error deleting profile image:", err);
+    });
+    user.profileImage = null;
+    return this.userRepository.save(user);
   }
 }

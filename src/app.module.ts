@@ -7,6 +7,7 @@ import { Product } from './products/products.entity';
 import { ConfigService , ConfigModule} from '@nestjs/config'
 import { Review } from './reviews/reviews.entity';
 import { User } from './users/user.entity';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { User } from './users/user.entity';
     }),
     UserModule, 
     ProductModule, 
-    ReviewsModule
+    ReviewsModule,
+    UploadsModule
   ],
   providers: [
     {

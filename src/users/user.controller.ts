@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Post, Put, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { RegisterDto } from "./dtos/register.dto";
 import { LoginDto } from "./dtos/login.dto";
@@ -9,6 +9,11 @@ import { Roles } from "./decorators/user-role.decorator";
 import { UserType } from "src/utils/enums";
 import { AuthRolesGuard } from "./guards/auth.roles.guard";
 import { UpdateDto } from "./dtos/update.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { basename, extname, join } from "path";
+import type { Response } from "express";
+import { existsSync } from "fs";
 
 
 @Controller("api/users")
@@ -55,5 +60,49 @@ export class UserController {
     return this.userService.delete(id, payload)
   }
 
+  @Post('/images/profile-image')
+  @UseInterceptors(FileInterceptor('user-image', {
+    storage: diskStorage({
+      destination: './images/users',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const fileExtName = extname(file.originalname);
+        const newFileName = `${uniqueSuffix}${fileExtName}`;
+        cb(null, newFileName);
+      }
+    }),
+    fileFilter: (req, file, cb) => {
+          if(file.mimetype.startsWith("image/")){
+            return cb(null, true);
+          }
+            return cb(new BadRequestException("Only image files are allowed!"), false);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB
+    }
+  }))
+  @UseGuards(AuthGuard)
+  public uploadProfileImage(@CurrentUser() payload: JwtPayLoadType, @UploadedFile() file: Express.Multer.File) {
+    if(!file){
+      throw new BadRequestException("File not found");
+    }
+    return this.userService.setProfileImage(payload.id, file.filename);
+  }
+
+  @Delete('images/remove-profile-image')
+  @UseGuards(AuthGuard)
+  public removeProfileImage(@CurrentUser() payload: JwtPayLoadType) {
+    return this.userService.removeProfileImage(payload.id);
+  }
+
+  @Get('images/:image')
+  @UseGuards(AuthGuard)
+  public getProfileImage(@Param('image') image: string, @Res() res: Response) {
+    const safeName = basename(image); // Prevent directory traversal attacks
+    if (!existsSync(join(process.cwd(), "images", "users", safeName))) {
+      throw new NotFoundException("Image not found");
+    }
+    return res.sendFile(image, { root: './images/users' });
+  }
 
 }
