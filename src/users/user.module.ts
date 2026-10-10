@@ -4,7 +4,7 @@ import { UserService } from "./user.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./user.entity";
 import { JwtModule } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { StringValue } from "ms";
 import { AuthProvider } from "./auth.provider";
 import { extname } from "path";
@@ -18,6 +18,7 @@ import { MailModule } from "src/mail/mail.module";
   providers: [UserService, AuthProvider],
   exports: [UserService],
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([User]),
     JwtModule.registerAsync({
       global: true,

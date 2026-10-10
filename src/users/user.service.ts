@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import * as bcrypt from "bcryptjs";
@@ -11,6 +11,7 @@ import { UserType } from "src/utils/enums";
 import { AuthProvider } from "./auth.provider";
 import { join } from "path";
 import { unlink } from "fs/promises";
+import { ResetPasswordDto } from "./dtos/reset-password.dto";
 
 @Injectable()
 export class UserService {
@@ -125,5 +126,36 @@ export class UserService {
     });
     user.profileImage = null;
     return this.userRepository.save(user);
+  }
+
+
+  /**
+   * verify email of the user
+   * @param userId id of the user that we get from the link
+   * @param verificationToken verification token that we get from the link
+   * @returns success message if email is verified successfully
+   */
+  public async verifyEmail(userId: number, verificationToken: string) {
+    const user = await this.getCurrentUser(userId);
+    if (!user) throw new NotFoundException("invalid request");
+    if (user.verificationToken === null) throw new NotFoundException("there is no verification token for this user");
+    if (user.verificationToken !== verificationToken) throw new ForbiddenException("invalid request");
+    user.isAcountVarified = true;
+    user.verificationToken = null;
+    await this.userRepository.save(user);
+    return { message: "Email verified successfully" };
+  }
+
+  public async sendResetPassword(email: string){
+    return this.authProvider.sendResetPasswordLink(email);
+  }
+
+  public async ResetPassword(userId: number, resetPasswordToken: string){
+    return this.authProvider.getResetPasswordLink(userId, resetPasswordToken)
+  }
+
+  
+  public async resetPassword(dto: ResetPasswordDto){
+    return this.authProvider.resetPassword(dto);
   }
 }

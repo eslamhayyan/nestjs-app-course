@@ -28,6 +28,13 @@ export class User{
   @Column({default: false})
   isAcountVarified!: boolean;
 
+  @Column({type: 'varchar', nullable: true, default: null, length: 64})
+  verificationToken!: string | null;
+
+  @Column({type: 'varchar', nullable: true, default: null, length: 64})
+  resetPasswordToken!: string | null;
+
+
   @Column({type: 'varchar',nullable: true, default: null})
   profileImage!: string | null;
 
